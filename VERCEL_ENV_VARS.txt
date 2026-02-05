@@ -1,0 +1,52 @@
+# Environment Variables for Vercel Dashboard
+# Copy these to: vercel.com/dashboard → flash-campaigns → Settings → Environment Variables
+
+# ============================================================================
+# DATABASE (Required)
+# ============================================================================
+DATABASE_URL=postgresql://postgres.xdtfcrkdnbzakmmbnnba:[YOUR-PASSWORD]@aws-0-us-west-1.pooler.supabase.com:6543/postgres
+
+# ============================================================================
+# NEXTAUTH (Required)
+# ============================================================================
+NEXTAUTH_URL=https://YOUR-VERCEL-URL.vercel.app
+NEXTAUTH_SECRET=Di7sl5WtaIOpYnl4nsRqJj7F92wxzJgCxHrn7c6oQ1s=
+
+# ============================================================================
+# ENCRYPTION (Required)
+# ============================================================================
+ENCRYPTION_KEY=ce81981bf6f7601133510c5777cf0cd4360bf6f68ca913b8e74668c227593034
+
+# ============================================================================
+# CRON & WEBHOOKS (Required)
+# ============================================================================
+CRON_SECRET=CRxTPgiqJz1PYVbSD/J9yXc3Re2f3FupVdrhGKFvfVU=
+TELEGRAM_WEBHOOK_SECRET=lhe/G87rgC4OYI5DH1gsn5TL9AalbogOsqRJLFc+eC8=
+
+# ============================================================================
+# X OAUTH (Add when you get credentials)
+# ============================================================================
+X_CLIENT_ID=your_x_client_id_here
+X_CLIENT_SECRET=your_x_client_secret_here
+X_API_BEARER_TOKEN=
+
+# ============================================================================
+# TELEGRAM (Add when you create bot)
+# ============================================================================
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+
+# ============================================================================
+# PUBLIC VARIABLES (Required)
+# ============================================================================
+NEXT_PUBLIC_APP_URL=https://YOUR-VERCEL-URL.vercel.app
+NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=FlashCampaignsBot
+
+# ============================================================================
+# INSTRUCTIONS
+# ============================================================================
+# 1. Wait for deployment to complete
+# 2. Copy YOUR-VERCEL-URL from deployment output
+# 3. Replace [YOUR-PASSWORD] with your Supabase password
+# 4. Go to vercel.com/dashboard → flash-campaigns → Settings → Environment Variables
+# 5. Add each variable above
+# 6. Click "Redeploy" after adding all variables
