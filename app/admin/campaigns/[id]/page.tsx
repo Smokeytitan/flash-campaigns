@@ -43,7 +43,7 @@ async function getCampaign(id: string) {
 export default async function AdminCampaignPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const session = await auth();
 
@@ -51,7 +51,8 @@ export default async function AdminCampaignPage({
     redirect('/');
   }
 
-  const campaign = await getCampaign(params.id);
+  const { id } = await params;
+  const campaign = await getCampaign(id);
 
   if (!campaign) {
     redirect('/admin');

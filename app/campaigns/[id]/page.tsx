@@ -51,10 +51,11 @@ async function getUserSubmission(campaignId: string, userId: string) {
 export default async function CampaignDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const session = await auth();
-  const campaign = await getCampaign(params.id);
+  const campaign = await getCampaign(id);
 
   if (!campaign) {
     notFound();
