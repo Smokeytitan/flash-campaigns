@@ -1,0 +1,173 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum CampaignStatus {
+  DRAFT
+  LIVE
+  ENDED
+  WINNERS_SELECTED
+}
+
+enum SubmissionStatus {
+  SUBMITTED
+  INVALID
+  WINNER
+  REJECTED
+}
+
+enum NotificationChannel {
+  TELEGRAM
+}
+
+enum NotificationStatus {
+  SENT
+  FAILED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Role
+  role Role @default(USER)
+
+  // X (Twitter) OAuth
+  xUserId        String?   @unique
+  xHandle        String?   @unique
+  xName          String?
+  xAvatarUrl     String?
+  xAccessToken   String?   // Encrypted
+  xRefreshToken  String?   // Encrypted
+  xTokenExpiry   DateTime?
+
+  // Telegram
+  telegramChatId      String?   @unique
+  telegramUsername    String?
+  telegramLinkingCode String?   // Temporary code for linking
+  telegramCodeExpiry  DateTime?
+  notifyOptIn         Boolean   @default(true)
+
+  // Relations
+  submissions      Submission[]
+  winners          Winner[]
+  campaignsCreated Campaign[]
+  notificationsLog NotificationLog[]
+
+  @@index([xHandle])
+  @@index([xUserId])
+  @@index([telegramChatId])
+}
+
+model Campaign {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title        String
+  brief        String   @db.Text
+  requirements String[] // Array of requirement strings
+
+  status CampaignStatus @default(DRAFT)
+
+  startAt DateTime?
+  endAt   DateTime?
+
+  prizePoolAmount   Decimal @db.Decimal(12, 2)
+  prizePoolCurrency String  @default("USD")
+  winnersCount      Int
+
+  // Relations
+  createdBy   User   @relation(fields: [createdById], references: [id])
+  createdById String
+
+  submissions      Submission[]
+  winners          Winner[]
+  notificationsLog NotificationLog[]
+
+  @@index([status])
+  @@index([createdById])
+}
+
+model Submission {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  xPostUrl String
+  xPostId  String
+  status   SubmissionStatus @default(SUBMITTED)
+
+  // Relations
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  winner Winner?
+
+  @@unique([campaignId, userId]) // One submission per user per campaign
+  @@index([campaignId])
+  @@index([userId])
+  @@index([status])
+}
+
+model Winner {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  rank        Int      // 1, 2, 3, etc.
+  prizeAmount Decimal? @db.Decimal(12, 2)
+
+  // Relations
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId String
+
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submissionId String     @unique
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  selectedBy String   // Admin user ID who selected
+  selectedAt DateTime @default(now())
+
+  @@index([campaignId])
+  @@index([userId])
+}
+
+model NotificationLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  channel NotificationChannel
+  status  NotificationStatus
+
+  message String? @db.Text
+  error   String? @db.Text
+
+  // Relations
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@index([campaignId])
+  @@index([userId])
+  @@index([status])
+}
