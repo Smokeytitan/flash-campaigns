@@ -79,5 +79,16 @@ export const {
       return session;
     },
   },
-  providers: [],
+  providers: [
+    {
+      id: 'credentials',
+      name: 'Credentials',
+      type: 'credentials',
+      credentials: {},
+      async authorize() {
+        // This is a placeholder - actual auth happens via X OAuth
+        return null;
+      },
+    },
+  ],
 });
