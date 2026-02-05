@@ -5,13 +5,16 @@
 
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { LucideIcon } from "lucide-react"
 
 export interface ChipProps extends React.HTMLAttributes<HTMLDivElement> {
-  icon?: React.ReactNode
+  icon?: LucideIcon
+  label?: string
+  value?: string
 }
 
 const Chip = React.forwardRef<HTMLDivElement, ChipProps>(
-  ({ className, icon, children, ...props }, ref) => {
+  ({ className, icon: Icon, label, value, children, ...props }, ref) => {
     return (
       <div
         ref={ref}
@@ -24,7 +27,9 @@ const Chip = React.forwardRef<HTMLDivElement, ChipProps>(
         )}
         {...props}
       >
-        {icon && <span className="text-muted-foreground">{icon}</span>}
+        {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
+        {label && <span className="text-muted-foreground">{label}:</span>}
+        {value && <span>{value}</span>}
         {children}
       </div>
     )
