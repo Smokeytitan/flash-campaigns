@@ -106,9 +106,9 @@ export async function POST(request: NextRequest) {
     // Handle message
     if (update.message && update.message.text) {
       const message = update.message;
-      const text = message.text.trim();
+      const text = message.text?.trim() || '';
       const chatId = message.chat.id;
-      const username = message.from.username;
+      const username = message.from?.username;
 
       // Handle /start command with code
       if (text.startsWith('/start ')) {
