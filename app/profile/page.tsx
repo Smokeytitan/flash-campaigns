@@ -61,9 +61,32 @@ export default async function ProfilePage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-[rgb(var(--color-text-primary))] mb-8">
-          Profile
-        </h1>
+        {/* Profile Header with Avatar */}
+        <div className="flex items-center gap-4 mb-8">
+          {user.xAvatarUrl ? (
+            <img
+              src={user.xAvatarUrl}
+              alt={user.xName || user.xHandle || 'Profile'}
+              className="w-16 h-16 rounded-full border-2 border-[rgb(var(--color-border-primary))]"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-[rgb(var(--color-bg-secondary))] border-2 border-[rgb(var(--color-border-primary))] flex items-center justify-center">
+              <span className="text-2xl font-bold text-[rgb(var(--color-text-secondary))]">
+                {clerkUser.firstName?.[0]?.toUpperCase() || 'U'}
+              </span>
+            </div>
+          )}
+          <div>
+            <h1 className="text-3xl font-bold text-[rgb(var(--color-text-primary))]">
+              {user.name || clerkUser.fullName || 'Profile'}
+            </h1>
+            {user.xHandle && (
+              <p className="text-sm text-[rgb(var(--color-text-secondary))]">
+                @{user.xHandle}
+              </p>
+            )}
+          </div>
+        </div>
 
         <div className="mb-8">
           <ProfileSettings user={user} />

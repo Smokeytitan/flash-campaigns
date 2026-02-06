@@ -45,19 +45,30 @@ export async function GET(request: NextRequest) {
     // Fetch user profile from X
     const profile = await xOAuthClient.getUserProfile(tokens.access_token);
 
-    // Update user record with X credentials
-    await prisma.user.update({
+    // Encrypt tokens
+    const encryptedAccessToken = encrypt(tokens.access_token);
+    const encryptedRefreshToken = tokens.refresh_token
+      ? encrypt(tokens.refresh_token)
+      : null;
+
+    // Upsert user record with X credentials (handles case where user record
+    // may not exist yet if Clerk webhook hasn't fired)
+    const xData = {
+      xUserId: profile.data.id,
+      xHandle: profile.data.username,
+      xName: profile.data.name,
+      xAvatarUrl: profile.data.profile_image_url,
+      xAccessToken: encryptedAccessToken,
+      xRefreshToken: encryptedRefreshToken,
+      xTokenExpiry: new Date(Date.now() + tokens.expires_in * 1000),
+    };
+
+    await prisma.user.upsert({
       where: { id: state },
-      data: {
-        xUserId: profile.data.id,
-        xHandle: profile.data.username,
-        xName: profile.data.name,
-        xAvatarUrl: profile.data.profile_image_url,
-        xAccessToken: encrypt(tokens.access_token),
-        xRefreshToken: tokens.refresh_token
-          ? encrypt(tokens.refresh_token)
-          : null,
-        xTokenExpiry: new Date(Date.now() + tokens.expires_in * 1000),
+      update: xData,
+      create: {
+        id: state,
+        ...xData,
       },
     });
 
@@ -68,8 +79,9 @@ export async function GET(request: NextRequest) {
     response.cookies.delete('x_code_verifier');
 
     return response;
-  } catch (error) {
-    console.error('X Auth callback error:', error);
+  } catch (error: any) {
+    console.error('X Auth callback error:', error?.message || error);
+    console.error('Full error:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
     return NextResponse.redirect(
       new URL('/profile?error=connection_failed', request.url)
     );
