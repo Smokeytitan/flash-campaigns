@@ -4,7 +4,7 @@
  * Server Actions for Campaign Management
  */
 
-import { auth } from '@/auth';
+import { currentUser } from '@clerk/nextjs/server';
 import prisma from '@/lib/db/prisma';
 import { revalidatePath } from 'next/cache';
 
@@ -12,8 +12,8 @@ export async function createCampaign(
   formData: FormData
 ): Promise<{ success: boolean; campaignId?: string; error?: string }> {
   try {
-    const session = await auth();
-    if (!session || !session.user || session.user.role !== 'ADMIN') {
+    const user = await currentUser();
+    if (!user || user.publicMetadata?.role !== 'ADMIN') {
       return { success: false, error: 'Unauthorized' };
     }
 
@@ -50,7 +50,7 @@ export async function createCampaign(
         prizePoolAmount: parseFloat(prizePoolAmount),
         prizePoolCurrency: (prizePoolCurrency || 'USD').trim().toUpperCase(),
         winnersCount: parseInt(winnersCount, 10),
-        createdById: session.user.id,
+        createdById: user.id,
       },
     });
 
@@ -69,8 +69,8 @@ export async function updateCampaignStatus(
   status: 'DRAFT' | 'LIVE' | 'ENDED' | 'WINNERS_SELECTED'
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const session = await auth();
-    if (!session || !session.user || session.user.role !== 'ADMIN') {
+    const user = await currentUser();
+    if (!user || user.publicMetadata?.role !== 'ADMIN') {
       return { success: false, error: 'Unauthorized' };
     }
 
@@ -96,8 +96,8 @@ export async function selectWinners(
   submissionIds: string[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const session = await auth();
-    if (!session || !session.user || session.user.role !== 'ADMIN') {
+    const user = await currentUser();
+    if (!user || user.publicMetadata?.role !== 'ADMIN') {
       return { success: false, error: 'Unauthorized' };
     }
 
@@ -149,7 +149,7 @@ export async function selectWinners(
               userId: submission.userId,
               rank: index + 1,
               prizeAmount: prizePerWinner,
-              selectedBy: session.user.id,
+              selectedBy: user.id,
             },
           })
         )

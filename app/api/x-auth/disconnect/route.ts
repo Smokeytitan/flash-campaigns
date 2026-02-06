@@ -4,13 +4,13 @@
  */
 
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { requireAuth } from '@/lib/clerk-auth';
 import prisma from '@/lib/db/prisma';
 
 export async function POST() {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await requireAuth();
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -19,7 +19,7 @@ export async function POST() {
 
     // Clear X-related fields
     await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: userId },
       data: {
         xUserId: null,
         xHandle: null,

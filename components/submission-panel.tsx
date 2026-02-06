@@ -1,14 +1,21 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { CheckCircle2, ExternalLink } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { submitToCampaign } from "@/app/actions/submissions"
 
 type SubmissionState = "idle" | "submitting" | "success"
 
-export function SubmissionPanel() {
+interface SubmissionPanelProps {
+  campaignId: string
+}
+
+export function SubmissionPanel({ campaignId }: SubmissionPanelProps) {
+  const router = useRouter()
   const [url, setUrl] = useState("")
   const [state, setState] = useState<SubmissionState>("idle")
   const [error, setError] = useState("")
@@ -25,17 +32,31 @@ export function SubmissionPanel() {
     return ""
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const validationError = validate(url)
     if (validationError) {
       setError(validationError)
       return
     }
+
     setError("")
     setState("submitting")
-    setTimeout(() => {
-      setState("success")
-    }, 1200)
+
+    try {
+      const result = await submitToCampaign(campaignId, url)
+
+      if (result.success) {
+        setState("success")
+        // Refresh the page to show the updated state
+        router.refresh()
+      } else {
+        setState("idle")
+        setError(result.error || "Failed to submit. Please try again.")
+      }
+    } catch (err) {
+      setState("idle")
+      setError("An unexpected error occurred. Please try again.")
+    }
   }
 
   if (state === "success") {
@@ -95,7 +116,7 @@ export function SubmissionPanel() {
         </div>
         <Button
           onClick={handleSubmit}
-          disabled={state === "submitting"}
+          disabled={state === "submitting" || !url.trim()}
           className="shrink-0"
         >
           {state === "submitting" ? "Submitting..." : "Submit"}

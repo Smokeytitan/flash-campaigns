@@ -51,7 +51,7 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
         </div>
         <div className="hidden shrink-0 pt-6 sm:block">
           <Button asChild size="sm" variant={isActive ? "default" : "outline"}>
-            <Link href={`/campaign/${campaign.id}`}>
+            <Link href={`/campaigns/${campaign.id}`}>
               {isActive ? "View brief" : "View results"}
               <ArrowRight className="ml-1 h-3.5 w-3.5" />
             </Link>
@@ -60,7 +60,7 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
       </div>
       <div className="mt-4 sm:hidden">
         <Button asChild className="w-full" size="sm" variant={isActive ? "default" : "outline"}>
-          <Link href={`/campaign/${campaign.id}`}>
+          <Link href={`/campaigns/${campaign.id}`}>
             {isActive ? "View brief" : "View results"}
             <ArrowRight className="ml-1 h-3.5 w-3.5" />
           </Link>

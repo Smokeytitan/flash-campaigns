@@ -3,7 +3,7 @@
  * View submissions and select winners
  */
 
-import { auth } from '@/auth';
+import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import prisma from '@/lib/db/prisma';
@@ -45,9 +45,9 @@ export default async function AdminCampaignPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const session = await auth();
+  const user = await currentUser();
 
-  if (!session || !session.user || session.user.role !== 'ADMIN') {
+  if (!user || user.publicMetadata?.role !== 'ADMIN') {
     redirect('/');
   }
 

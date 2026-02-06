@@ -3,14 +3,13 @@
  * User can connect X account and Telegram, view their submissions
  */
 
-import { auth } from '@/auth';
+import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import prisma from '@/lib/db/prisma';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Check, ExternalLink } from 'lucide-react';
-import { XAccountCard } from '@/components/profile/XAccountCard';
-import { TelegramCard } from '@/components/profile/TelegramCard';
+import { ProfileSettings } from '@/components/profile-settings';
 
 async function getUser(userId: string) {
   return await prisma.user.findUnique({
@@ -32,17 +31,17 @@ async function getUserSubmissions(userId: string) {
 }
 
 export default async function ProfilePage() {
-  const session = await auth();
+  const clerkUser = await currentUser();
 
-  if (!session || !session.user) {
-    redirect('/api/auth/signin');
+  if (!clerkUser) {
+    redirect('/sign-in');
   }
 
-  const user = await getUser(session.user.id);
-  const submissions = await getUserSubmissions(session.user.id);
+  const user = await getUser(clerkUser.id);
+  const submissions = await getUserSubmissions(clerkUser.id);
 
   if (!user) {
-    redirect('/api/auth/signin');
+    redirect('/sign-in');
   }
 
   return (
@@ -66,12 +65,8 @@ export default async function ProfilePage() {
           Profile
         </h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* X Account */}
-          <XAccountCard user={user} />
-
-          {/* Telegram */}
-          <TelegramCard user={user} />
+        <div className="mb-8">
+          <ProfileSettings user={user} />
         </div>
 
         {/* Submissions */}

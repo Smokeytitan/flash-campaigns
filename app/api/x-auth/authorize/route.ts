@@ -5,15 +5,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { requireAuth } from '@/lib/clerk-auth';
 import { xOAuthClient } from '@/lib/x-oauth/client';
 import { generatePKCEPair } from '@/lib/x-oauth/pkce';
 
 export async function GET(request: NextRequest) {
   try {
     // Require authenticated session
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await requireAuth();
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     // Build authorization URL
     const authUrl = xOAuthClient.getAuthorizationUrl(
-      session.user.id, // Pass user ID as state
+      userId, // Pass user ID as state
       codeChallenge
     );
 

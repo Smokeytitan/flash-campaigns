@@ -3,7 +3,7 @@
  * Form for admins to create new campaigns
  */
 
-import { auth } from '@/auth';
+import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -11,9 +11,9 @@ import { ArrowLeft } from 'lucide-react';
 import { CampaignForm } from '@/components/admin/CampaignForm';
 
 export default async function NewCampaignPage() {
-  const session = await auth();
+  const user = await currentUser();
 
-  if (!session || !session.user || session.user.role !== 'ADMIN') {
+  if (!user || user.publicMetadata?.role !== 'ADMIN') {
     redirect('/');
   }
 

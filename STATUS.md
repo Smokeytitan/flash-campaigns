@@ -21,10 +21,11 @@
 ## ⏳ In Progress
 
 ### Database Setup
-- [x] Database connection string updated to: `postgresql://postgres:***@db.xdtfcrkdnbzakmmbnnba.supabase.co:5432/postgres`
+- [x] Database connection string updated to use IPv4-compatible shared pooler: `postgresql://postgres.xdtfcrkdnbzakmmbnnba:***@aws-1-us-east-2.pooler.supabase.com:5432/postgres`
 - [x] Fixed Server Components render error - added missing NextAuth models to schema
-- [ ] Waiting for Vercel deployment to complete (commit 9cb21a1)
-- [ ] Testing site loads successfully at https://polygon-flash-campaigns.vercel.app
+- [x] Switched to Supabase shared pooler with IPv4 support for Vercel compatibility
+- [x] Deployment successful (commit a896c9f)
+- [x] Site loads successfully at https://polygon-flash-campaigns.vercel.app
 
 ## 📋 TODO
 
@@ -106,6 +107,8 @@ Schema defined in `prisma/schema.prisma`:
 
 ### Recently Fixed
 - ✅ **Server Components 500 Error** - Fixed by adding missing NextAuth tables (Account, Session, VerificationToken) to Prisma schema
+- ✅ **Database Connection from Vercel** - Fixed IPv6/IPv4 compatibility issue by switching to Supabase shared pooler (aws-1-us-east-2.pooler.supabase.com) which supports IPv4 connections required by Vercel serverless
+- ✅ **Site Successfully Deployed** - Homepage loads without errors, database connected, ready for admin user creation
 
 ### Architecture
 - **Framework**: Next.js 15.2.6 (App Router)

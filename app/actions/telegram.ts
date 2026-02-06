@@ -4,7 +4,7 @@
  * Server Actions for Telegram Integration
  */
 
-import { auth } from '@/auth';
+import { currentUser } from '@clerk/nextjs/server';
 import prisma from '@/lib/db/prisma';
 import crypto from 'crypto';
 
@@ -14,8 +14,8 @@ export async function generateTelegramLinkingCode(): Promise<{
   error?: string;
 }> {
   try {
-    const session = await auth();
-    if (!session || !session.user) {
+    const user = await currentUser();
+    if (!user) {
       return { success: false, error: 'Not authenticated' };
     }
 
@@ -27,7 +27,7 @@ export async function generateTelegramLinkingCode(): Promise<{
 
     // Update user with linking code
     await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: user.id },
       data: {
         telegramLinkingCode: code,
         telegramCodeExpiry: expiry,

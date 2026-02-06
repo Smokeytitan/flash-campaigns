@@ -4,7 +4,7 @@
  * Server Actions for Campaign Submissions
  */
 
-import { auth } from '@/auth';
+import { currentUser } from '@clerk/nextjs/server';
 import prisma from '@/lib/db/prisma';
 import { revalidatePath } from 'next/cache';
 
@@ -14,8 +14,8 @@ export async function submitToCampaign(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Check authentication
-    const session = await auth();
-    if (!session || !session.user) {
+    const user = await currentUser();
+    if (!user) {
       return { success: false, error: 'You must be signed in to submit' };
     }
 
@@ -50,7 +50,7 @@ export async function submitToCampaign(
       where: {
         campaignId_userId: {
           campaignId,
-          userId: session.user.id,
+          userId: user.id,
         },
       },
     });
@@ -66,7 +66,7 @@ export async function submitToCampaign(
     await prisma.submission.create({
       data: {
         campaignId,
-        userId: session.user.id,
+        userId: user.id,
         xPostUrl: xPostUrl.trim(),
         xPostId,
         status: 'SUBMITTED',

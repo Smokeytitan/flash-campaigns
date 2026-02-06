@@ -8,7 +8,21 @@ import { SubmissionPanel } from "@/components/submission-panel"
 import { Button } from "@/components/ui/button"
 import type { Campaign } from "@/components/campaign-card"
 
-export function CampaignDetail({ campaign }: { campaign: Campaign }) {
+interface CampaignDetailProps {
+  campaign: Campaign
+  isAuthenticated?: boolean
+  hasSubmitted?: boolean
+  submissionUrl?: string
+  isWinner?: boolean
+}
+
+export function CampaignDetail({
+  campaign,
+  isAuthenticated = false,
+  hasSubmitted = false,
+  submissionUrl,
+  isWinner = false,
+}: CampaignDetailProps) {
   const isActive = campaign.status === "live" || campaign.status === "ending-soon"
 
   return (
@@ -66,7 +80,49 @@ export function CampaignDetail({ campaign }: { campaign: Campaign }) {
 
       {/* Submission */}
       {isActive ? (
-        <SubmissionPanel />
+        isAuthenticated ? (
+          hasSubmitted ? (
+            <div className="rounded-xl border bg-card p-6">
+              <p className="text-sm font-semibold text-foreground mb-2">
+                Submission received
+              </p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Your entry has been submitted. Winners will be announced after the campaign ends.
+              </p>
+              {submissionUrl && (
+                <a
+                  href={submissionUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary underline underline-offset-2 hover:text-primary/80"
+                >
+                  View your submission
+                </a>
+              )}
+              {isWinner && (
+                <div className="mt-4 rounded-lg border border-success/30 bg-success/5 p-4">
+                  <p className="text-sm font-semibold text-success">
+                    Congratulations! You won this campaign!
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <SubmissionPanel campaignId={campaign.id} />
+          )
+        ) : (
+          <div className="rounded-xl border bg-card p-6 text-center">
+            <p className="text-sm font-semibold text-foreground mb-2">
+              Sign in to submit
+            </p>
+            <p className="text-sm text-muted-foreground mb-4">
+              You need to be signed in to submit your entry.
+            </p>
+            <Button asChild variant="default" size="sm">
+              <Link href="/api/auth/signin">Sign in</Link>
+            </Button>
+          </div>
+        )
       ) : campaign.status === "winners-selected" ? (
         <div className="rounded-xl border bg-card p-6 text-center">
           <p className="text-sm font-semibold text-foreground">
@@ -76,7 +132,7 @@ export function CampaignDetail({ campaign }: { campaign: Campaign }) {
             Winners have been selected.
           </p>
           <Button asChild variant="outline" size="sm" className="mt-4 bg-transparent">
-            <Link href={`/campaign/${campaign.id}/winners`}>View winners</Link>
+            <Link href={`/campaigns/${campaign.id}/winners`}>View winners</Link>
           </Button>
         </div>
       ) : (
