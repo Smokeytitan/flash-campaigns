@@ -2,9 +2,11 @@
  * Homepage - Campaign Feed
  * Shows live and ended campaigns for creators
  * Updated to use v0 design components with real Prisma data
+ * PROTECTED: Requires authentication
  */
 
 import { currentUser } from '@clerk/nextjs/server';
+import { redirect } from 'next/navigation';
 import prisma from '@/lib/db/prisma';
 import { formatDistanceToNow, isPast } from 'date-fns';
 import { AppHeaderWrapper } from '@/components/app-header-wrapper';
@@ -86,6 +88,11 @@ function mapCampaignToV0Format(
 
 export default async function HomePage() {
   const user = await currentUser();
+
+  // Require authentication to view homepage
+  if (!user) {
+    redirect('/sign-in');
+  }
 
   const campaigns = await getCampaigns();
   const v0Campaigns = campaigns.map(mapCampaignToV0Format);
