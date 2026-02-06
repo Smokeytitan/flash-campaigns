@@ -11,6 +11,7 @@ import prisma from '@/lib/db/prisma';
 import { formatDistanceToNow, isPast } from 'date-fns';
 import { AppHeaderWrapper } from '@/components/app-header-wrapper';
 import { CampaignFeedClient } from '@/components/campaign-feed-client';
+import { ConnectXBanner } from '@/components/connect-x-banner';
 import type { Campaign } from '@/components/campaign-card';
 
 async function getCampaigns() {
@@ -94,12 +95,20 @@ export default async function HomePage() {
     redirect('/sign-in');
   }
 
+  // Check if user has X connected
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { xHandle: true },
+  });
+  const hasXConnected = !!dbUser?.xHandle;
+
   const campaigns = await getCampaigns();
   const v0Campaigns = campaigns.map(mapCampaignToV0Format);
 
   return (
     <div className="min-h-screen">
       <AppHeaderWrapper />
+      {!hasXConnected && <ConnectXBanner />}
       <CampaignFeedClient campaigns={v0Campaigns} />
     </div>
   );
