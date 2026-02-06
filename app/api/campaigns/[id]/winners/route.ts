@@ -5,6 +5,7 @@
 
 import { requireAdmin } from '@/lib/clerk-auth';
 import prisma from '@/lib/db/prisma';
+import { notifyWinner } from '@/lib/telegram/notifications';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(
@@ -143,6 +144,13 @@ export async function POST(
 
       return winners;
     });
+
+    // Send Telegram notifications to winners (fire-and-forget, don't block response)
+    for (const winner of result) {
+      notifyWinner(winner.id).catch((err) =>
+        console.error(`Failed to notify winner ${winner.id}:`, err)
+      );
+    }
 
     return NextResponse.json({
       success: true,
