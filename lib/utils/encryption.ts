@@ -12,7 +12,7 @@ const AUTH_TAG_LENGTH = 16;
 const KEY_LENGTH = 32;
 
 function getEncryptionKey(): Buffer {
-  const key = process.env.ENCRYPTION_KEY;
+  const key = process.env.ENCRYPTION_KEY?.trim();
   if (!key) {
     throw new Error('ENCRYPTION_KEY environment variable is not set');
   }
@@ -20,7 +20,7 @@ function getEncryptionKey(): Buffer {
   // Ensure key is correct length
   const keyBuffer = Buffer.from(key, 'hex');
   if (keyBuffer.length !== KEY_LENGTH) {
-    throw new Error(`ENCRYPTION_KEY must be ${KEY_LENGTH} bytes (${KEY_LENGTH * 2} hex characters)`);
+    throw new Error(`ENCRYPTION_KEY must be ${KEY_LENGTH} bytes (${KEY_LENGTH * 2} hex characters), got ${keyBuffer.length} bytes`);
   }
 
   return keyBuffer;

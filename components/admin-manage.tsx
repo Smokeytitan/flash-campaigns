@@ -1,5 +1,3 @@
-'use client';
-
 /**
  * AdminManage Component
  * Reusable wrapper for admin management pages

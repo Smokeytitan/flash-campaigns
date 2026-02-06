@@ -1,12 +1,16 @@
+'use client';
+
 /**
  * X Account Card
  * Shows X connection status and allows connect/disconnect
  */
 
+import { useState } from 'react';
 import { User } from '@prisma/client';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface XAccountCardProps {
   user: User;
@@ -14,6 +18,27 @@ interface XAccountCardProps {
 
 export function XAccountCard({ user }: XAccountCardProps) {
   const isConnected = !!user.xHandle;
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const router = useRouter();
+
+  async function handleDisconnect() {
+    setIsDisconnecting(true);
+    try {
+      const response = await fetch('/api/x-auth/disconnect', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        router.refresh();
+      } else {
+        console.error('Failed to disconnect X account');
+      }
+    } catch (error) {
+      console.error('Error disconnecting X account:', error);
+    } finally {
+      setIsDisconnecting(false);
+    }
+  }
 
   return (
     <div className="bg-white border border-[rgb(var(--color-border-primary))] rounded-xl p-6">
@@ -53,11 +78,21 @@ export function XAccountCard({ user }: XAccountCardProps) {
             </div>
           </div>
 
-          <form action="/api/x-auth/disconnect" method="POST">
-            <Button variant="ghost" size="sm" type="submit">
-              Disconnect
-            </Button>
-          </form>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDisconnect}
+            disabled={isDisconnecting}
+          >
+            {isDisconnecting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Disconnecting...
+              </>
+            ) : (
+              'Disconnect'
+            )}
+          </Button>
         </>
       ) : (
         <>

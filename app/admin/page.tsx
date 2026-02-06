@@ -99,13 +99,13 @@ export default async function AdminDashboardPage() {
                       >
                         {campaign.title}
                       </Link>
-                      {campaign.status === 'LIVE' && <Badge variant="live" />}
+                      {campaign.status === 'LIVE' && <Badge variant="live">Live</Badge>}
                       {campaign.status === 'DRAFT' && (
-                        <Badge variant="ended">Draft</Badge>
+                        <Badge variant="draft">Draft</Badge>
                       )}
-                      {campaign.status === 'ENDED' && <Badge variant="ended" />}
+                      {campaign.status === 'ENDED' && <Badge variant="ended">Ended</Badge>}
                       {campaign.status === 'WINNERS_SELECTED' && (
-                        <Badge variant="winners-selected" />
+                        <Badge variant="winners-selected">Winners Selected</Badge>
                       )}
                     </div>
                     <p className="text-[rgb(var(--color-text-secondary))] text-sm line-clamp-1">

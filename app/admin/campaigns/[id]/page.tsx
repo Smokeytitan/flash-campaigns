@@ -43,7 +43,7 @@ async function getCampaign(id: string) {
 export default async function AdminCampaignPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
   const user = await currentUser();
 
@@ -51,7 +51,7 @@ export default async function AdminCampaignPage({
     redirect('/');
   }
 
-  const { id } = await params;
+  const { id } = params;
   const campaign = await getCampaign(id);
 
   if (!campaign) {
@@ -77,11 +77,11 @@ export default async function AdminCampaignPage({
                 {campaign.title}
               </h1>
               <div className="flex items-center gap-2">
-                {campaign.status === 'LIVE' && <Badge variant="live" />}
-                {campaign.status === 'DRAFT' && <Badge variant="ended">Draft</Badge>}
-                {campaign.status === 'ENDED' && <Badge variant="ended" />}
+                {campaign.status === 'LIVE' && <Badge variant="live">Live</Badge>}
+                {campaign.status === 'DRAFT' && <Badge variant="draft">Draft</Badge>}
+                {campaign.status === 'ENDED' && <Badge variant="ended">Ended</Badge>}
                 {campaign.status === 'WINNERS_SELECTED' && (
-                  <Badge variant="winners-selected" />
+                  <Badge variant="winners-selected">Winners Selected</Badge>
                 )}
               </div>
             </div>

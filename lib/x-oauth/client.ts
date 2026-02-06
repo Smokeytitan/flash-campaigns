@@ -34,9 +34,17 @@ export class XOAuthClient {
   private redirectUri: string;
 
   constructor() {
-    this.clientId = process.env.X_CLIENT_ID || '';
-    this.clientSecret = process.env.X_CLIENT_SECRET || '';
-    this.redirectUri = `${process.env.NEXTAUTH_URL}/api/x-auth/callback`;
+    this.clientId = (process.env.X_CLIENT_ID || '').trim();
+    this.clientSecret = (process.env.X_CLIENT_SECRET || '').trim();
+
+    // Build callback URL: prefer NEXTAUTH_URL, fall back to NEXT_PUBLIC_APP_URL or VERCEL_URL
+    const baseUrl = (
+      process.env.NEXTAUTH_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
+      'http://localhost:3000'
+    ).trim();
+    this.redirectUri = `${baseUrl}/api/x-auth/callback`;
 
     if (!this.clientId || !this.clientSecret) {
       throw new Error('X OAuth credentials not configured');

@@ -45,9 +45,12 @@ This file contains important context, patterns, and solutions for working on thi
 
 ### Database
 
-**Connection**: Supabase PostgreSQL with transaction pooler
-- Uses pooler on port 6543 for better connection management
+**Connection**: Supabase PostgreSQL with session pooler (shared)
+- Uses session pooler at `aws-1-us-east-2.pooler.supabase.com:5432`
+- Project ref: `xdtfcrkdnbzakmmbnnba`
+- Direct connection (`db.*.supabase.co:5432`) does NOT resolve via DNS — always use pooler
 - Connection string in `DATABASE_URL` environment variable
+- Prisma reads from `.env` (not `.env.local`), so DATABASE_URL must be in `.env`
 
 ## Deployment
 
@@ -78,7 +81,7 @@ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_bmF0dXJhbC1jYWltYW4tNzMuY2xlcmsuYWNjb3
 CLERK_SECRET_KEY=sk_test_bv53XFWPO9WcMXp6lb5gwHmTnOjXWZGGcUdGaBNj3Z
 
 # Database
-DATABASE_URL=postgresql://postgres.xdtfcrkdnbzakmmbnnba:Steelclarksm10%3F@aws-0-us-west-1.pooler.supabase.com:6543/postgres
+DATABASE_URL=postgresql://postgres.xdtfcrkdnbzakmmbnnba:Steelclarksm10%3F@aws-1-us-east-2.pooler.supabase.com:5432/postgres
 
 # Other secrets
 CRON_SECRET=...
@@ -160,8 +163,10 @@ X_CLIENT_SECRET=...
 
 ## Development Workflow
 
+**IMPORTANT**: Always build (`npm run build`) before committing. Always push after committing. Never leave changes uncommitted.
+
 1. **Make changes** locally
-2. **Test** locally with `npm run dev`
+2. **Build** to verify: `npm run build` (must pass before committing)
 3. **Commit** changes with descriptive message
 4. **Push** to main branch: `git push origin main`
 5. **Vercel auto-deploys** (if configured) or manually redeploy

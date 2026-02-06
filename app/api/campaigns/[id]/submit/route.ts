@@ -11,7 +11,7 @@ import prisma from '@/lib/db/prisma';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     // Check authentication
@@ -24,7 +24,7 @@ export async function POST(
     }
 
     // Get campaign ID from params
-    const { id: campaignId } = await params;
+    const { id: campaignId } = params;
 
     // Parse request body
     const body = await request.json();
