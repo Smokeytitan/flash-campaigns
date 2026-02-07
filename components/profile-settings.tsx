@@ -8,6 +8,7 @@
 import { User } from '@prisma/client';
 import { XAccountCard } from '@/components/profile/XAccountCard';
 import { TelegramCard } from '@/components/profile/TelegramCard';
+import { WalletCard } from '@/components/profile/WalletCard';
 
 interface ProfileSettingsProps {
   user: User;
@@ -21,6 +22,9 @@ export function ProfileSettings({ user }: ProfileSettingsProps) {
 
       {/* Telegram */}
       <TelegramCard user={user} />
+
+      {/* Polygon Wallet */}
+      <WalletCard user={user} />
     </div>
   );
 }
