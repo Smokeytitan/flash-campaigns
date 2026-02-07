@@ -7,43 +7,61 @@
 
 import { User } from '@prisma/client';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, XCircle, Copy, Check, Bell, BellOff } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { CheckCircle2, XCircle, Bell, BellOff, Loader2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface TelegramCardProps {
   user: User;
 }
 
+const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'PolygonCampaignsBot';
+
 export function TelegramCard({ user }: TelegramCardProps) {
   const router = useRouter();
-  const [linkingCode, setLinkingCode] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isWaiting, setIsWaiting] = useState(false);
   const [notifyOptIn, setNotifyOptIn] = useState(user.notifyOptIn);
   const [isUpdatingPreferences, setIsUpdatingPreferences] = useState(false);
 
   const isConnected = !!user.telegramUsername;
 
-  // Check for existing pending code on mount
-  useEffect(() => {
-    const checkStatus = async () => {
-      if (!isConnected && !linkingCode) {
-        try {
-          const response = await fetch('/api/profile/telegram/status');
-          const data = await response.json();
-          if (data.success && data.hasPendingCode && data.pendingCode) {
-            setLinkingCode(data.pendingCode);
-          }
-        } catch (error) {
-          console.error('Error checking Telegram status:', error);
+  // Poll for connection while waiting
+  const pollForConnection = useCallback(() => {
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch('/api/profile/telegram/status');
+        const data = await response.json();
+        if (data.success && data.connected) {
+          clearInterval(interval);
+          setIsWaiting(false);
+          router.refresh();
         }
+      } catch (error) {
+        console.error('Error polling Telegram status:', error);
       }
-    };
-    checkStatus();
-  }, [isConnected, linkingCode]);
+    }, 3000);
 
-  const handleGenerateCode = async () => {
+    // Stop polling after 5 minutes
+    setTimeout(() => {
+      clearInterval(interval);
+      setIsWaiting(false);
+    }, 5 * 60 * 1000);
+
+    return interval;
+  }, [router]);
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | undefined;
+    if (isWaiting) {
+      interval = pollForConnection();
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isWaiting, pollForConnection]);
+
+  const handleLinkTelegram = async () => {
     setIsLoading(true);
     try {
       const response = await fetch('/api/profile/telegram/generate-code', {
@@ -51,7 +69,9 @@ export function TelegramCard({ user }: TelegramCardProps) {
       });
       const data = await response.json();
       if (data.success && data.code) {
-        setLinkingCode(data.code);
+        // Open Telegram deep link - this auto-sends /start CODE to the bot
+        window.open(`https://t.me/${BOT_USERNAME}?start=${data.code}`, '_blank');
+        setIsWaiting(true);
       }
     } catch (error) {
       console.error('Error generating code:', error);
@@ -60,22 +80,12 @@ export function TelegramCard({ user }: TelegramCardProps) {
     }
   };
 
-  const handleCopyCode = () => {
-    if (linkingCode) {
-      navigator.clipboard.writeText(linkingCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
   const handleToggleNotifications = async () => {
     setIsUpdatingPreferences(true);
     try {
       const response = await fetch('/api/profile/telegram/preferences', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notifyOptIn: !notifyOptIn }),
       });
       const data = await response.json();
@@ -119,59 +129,41 @@ export function TelegramCard({ user }: TelegramCardProps) {
             </div>
           </div>
 
-          {/* Notification Preferences Toggle */}
-          <div className="mb-4">
-            <button
-              onClick={handleToggleNotifications}
-              disabled={isUpdatingPreferences}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[rgb(var(--color-border-primary))] hover:bg-[rgb(var(--color-bg-secondary))] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {notifyOptIn ? (
-                <Bell className="w-4 h-4 text-green-600" />
-              ) : (
-                <BellOff className="w-4 h-4 text-[rgb(var(--color-text-tertiary))]" />
-              )}
-              <span className="text-sm font-medium text-[rgb(var(--color-text-primary))]">
-                {isUpdatingPreferences
-                  ? 'Updating...'
-                  : notifyOptIn
-                  ? 'Disable Notifications'
-                  : 'Enable Notifications'}
-              </span>
-            </button>
-          </div>
-        </>
-      ) : linkingCode ? (
-        <>
-          <div className="mb-4">
-            <p className="text-sm text-[rgb(var(--color-text-secondary))] mb-3">
-              Send this code to our Telegram bot to link your account:
-            </p>
-            <div className="flex items-center gap-2 p-3 bg-[rgb(var(--color-bg-secondary))] rounded-lg font-mono text-lg font-bold text-[rgb(var(--color-text-primary))]">
-              <span className="flex-1">{linkingCode}</span>
-              <button
-                onClick={handleCopyCode}
-                className="p-2 hover:bg-[rgb(var(--color-bg-primary))] rounded transition-colors"
-              >
-                {copied ? (
-                  <Check className="w-4 h-4 text-green-600" />
-                ) : (
-                  <Copy className="w-4 h-4" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          <a
-            href={`https://t.me/${process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME}?start=${linkingCode}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={handleToggleNotifications}
+            disabled={isUpdatingPreferences}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[rgb(var(--color-border-primary))] hover:bg-[rgb(var(--color-bg-secondary))] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Button variant="primary" size="sm">
-              Open Telegram Bot
-            </Button>
-          </a>
+            {notifyOptIn ? (
+              <Bell className="w-4 h-4 text-green-600" />
+            ) : (
+              <BellOff className="w-4 h-4 text-[rgb(var(--color-text-tertiary))]" />
+            )}
+            <span className="text-sm font-medium text-[rgb(var(--color-text-primary))]">
+              {isUpdatingPreferences
+                ? 'Updating...'
+                : notifyOptIn
+                ? 'Disable Notifications'
+                : 'Enable Notifications'}
+            </span>
+          </button>
         </>
+      ) : isWaiting ? (
+        <div className="text-center py-4">
+          <Loader2 className="w-6 h-6 animate-spin text-blue-500 mx-auto mb-3" />
+          <p className="text-sm font-medium text-[rgb(var(--color-text-primary))]">
+            Waiting for you to confirm in Telegram...
+          </p>
+          <p className="text-xs text-[rgb(var(--color-text-secondary))] mt-1">
+            Tap &quot;Start&quot; in the Telegram bot to complete linking.
+          </p>
+          <button
+            onClick={handleLinkTelegram}
+            className="mt-3 text-xs text-blue-600 hover:underline"
+          >
+            Re-open Telegram
+          </button>
+        </div>
       ) : (
         <>
           <p className="text-sm text-[rgb(var(--color-text-secondary))] mb-4">
@@ -181,10 +173,17 @@ export function TelegramCard({ user }: TelegramCardProps) {
           <Button
             variant="primary"
             size="sm"
-            onClick={handleGenerateCode}
+            onClick={handleLinkTelegram}
             disabled={isLoading}
           >
-            {isLoading ? 'Generating...' : 'Link Telegram'}
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Opening Telegram...
+              </>
+            ) : (
+              'Link Telegram'
+            )}
           </Button>
         </>
       )}
